@@ -7,6 +7,18 @@ const int dataLen = 32;
 static int data[dataLen];
 
 
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  - -
+// gets the size of the file
+int getFileSize(FILE* file)
+{
+	int current = ftell(file);
+
+	fseek(file, 0, SEEK_END);
+	int filesize = ftell(file);
+	fseek(file, current, SEEK_SET);
+
+	return filesize;
+}
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -16,6 +28,42 @@ int main(int argc, char* argv[])
 	{
 		showHelp();
 		return 0;
+	}
+
+
+	char *type = NULL,
+		*inputFile = NULL,
+		*outputFile = NULL;
+
+	for (int i = 0; i < argc; i++)
+	{
+		if (0 == strncmp("-f", argv[i], 2))
+			type = argv[++i];
+		else if (0 == strncmp("-i", argv[i], 2))
+			inputFile = argv[++i];
+		else if (0 == strncmp("-o", argv[i], 2))
+			outputFile = argv[++i];
+	}
+
+	if (type == NULL)
+	{
+		cout << "Error: No type specified.  Must be sma or ema." << endl;
+		return -1;
+	}
+	if (!(0 == strncmp("sma", type, 3) || 0 == strncmp("ema", type, 3)))
+	{
+		cout << "Error: Invalid type specified.  Must be sma or ema." << endl;
+		return -1;
+	}
+	if (inputFile == NULL)
+	{
+		cout << "Error: Input file is required." << endl;
+		return -1;
+	}
+	if (outputFile == NULL)
+	{
+		cout << "Error: Output file is required." << endl;
+		return -1;
 	}
 
 	return 0;
