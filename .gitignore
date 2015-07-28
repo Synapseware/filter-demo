@@ -1,8 +1,5 @@
 #Enterprise tools ignores
-upload
-hdrinfo
-stitch
-scvt
+filter
 
 #Basic ignores
 default/
@@ -17,13 +14,6 @@ TcfTransactionLog.csv
 **.directory
 
 
-#Ignore AVR Studio and Visual Studio files
-[Dd]ebug/
-[Rr]elease/
-*.suo
-*.avrsuo
-*.atsuo
-*.user
 #Ignore files produced by Eagle
 *.b#*
 *.l#*
@@ -34,10 +24,6 @@ Visual Micro/
 **.vcxproj.filters
 **.opensdf
 **.sdf
-
-
-#Ignore specific arduino release folders
-arduino/arduino-1.0.5/
 
 
 #Ignore build artifacts
@@ -53,11 +39,6 @@ arduino/arduino-1.0.5/
 *.out
 *.cof
 *.obj
-
-
-#Ignore credential headers
-private/
-credentials.h
 
 
 #Ignore binary and image files
