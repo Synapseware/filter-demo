@@ -4,25 +4,13 @@ using namespace std;
 
 
 // program globals
-const int		dataLen			= 32;
+const int		dataLen			= 2;
 static int		data[dataLen];
 static int		writePos		= 0;
 static int		samplesAdded	= 0;
 static ifstream	_fin;
 static ofstream	_fout;
 
-
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  - -
-void push_sample(int sample)
-{
-	if (samplesAdded < dataLen)
-		samplesAdded++;
-
-	data[writePos++] = sample;
-	if (writePos > dataLen - 1)
-		writePos = 0;
-}
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  - -
@@ -36,6 +24,18 @@ int getFileSize(FILE* file)
 	fseek(file, current, SEEK_SET);
 
 	return filesize;
+}
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  - -
+void sma_add(int sample)
+{
+	if (samplesAdded < dataLen)
+		samplesAdded++;
+
+	data[writePos++] = sample;
+	if (writePos > dataLen - 1)
+		writePos = 0;
 }
 
 
@@ -56,16 +56,21 @@ int filter_sma(void)
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Adds a new sample to the exponential moving average
+static int ema_last = 0;
+static int ema_average = 0;
+const float ema_k = 0.7;
+void ema_add(int sample)
+{
+	ema_average = sample * ema_k + ((1 - ema_k) * ema_average);
+}
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // 
 int filter_ema(void)
 {
-	for (int val = 0; val <= 100; val++)
-	{
-		int v2 = (val << 1) + ((v2 * 15) >> 4);
-		int v3 = (v2 + 16) >> 5;
-	}
-
-	return -1;
+	return ema_average;
 }
 
 
@@ -102,7 +107,7 @@ int read_next(void)
 // Saves the sample and it's average to the output file
 void save_sample(int sample, int average)
 {
-	_fout << sample << "," << average << endl;
+	_fout << sample << "\t" << average << endl;
 }
 
 
@@ -193,15 +198,16 @@ int main(int argc, char* argv[])
 	for (int i = 0; i < 100; i++)
 	{
 		int sample = read_next();
-		push_sample(sample);
 
 		int average = 0;
 		if (0 == strncmp("sma", type, 3))
 		{
+			sma_add(sample);
 			average = filter_sma();
 		}
 		else if (0 == strncmp("ema", type, 3))
 		{
+			ema_add(sample);
 			average = filter_ema();
 		}
 
