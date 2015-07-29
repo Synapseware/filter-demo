@@ -3,14 +3,22 @@
 using namespace std;
 
 
-const int dataLen = 32;
-static int data[dataLen];
-static int writePos = 0;
+// program globals
+const int		dataLen			= 32;
+static int		data[dataLen];
+static int		writePos		= 0;
+static int		samplesAdded	= 0;
+static ifstream	_fin;
+static ofstream	_fout;
+
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  - -
 void push_sample(int sample)
 {
+	if (samplesAdded < dataLen)
+		samplesAdded++;
+
 	data[writePos++] = sample;
 	if (writePos > dataLen - 1)
 		writePos = 0;
@@ -36,7 +44,7 @@ int getFileSize(FILE* file)
 int filter_sma(void)
 {
 	long average = 0;
-	for (int i = 0; i < dataLen; i++)
+	for (int i = 0; i < samplesAdded; i++)
 	{
 		average += data[i];
 	}
@@ -51,7 +59,81 @@ int filter_sma(void)
 // 
 int filter_ema(void)
 {
+	for (int val = 0; val <= 100; val++)
+	{
+		int v2 = (val << 1) + ((v2 * 15) >> 4);
+		int v3 = (v2 + 16) >> 5;
+	}
+
 	return -1;
+}
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Reads the next sample value from the input file
+int read_next(void)
+{
+	char line[64];
+	line[0] = '\0';
+
+	// read next, but skip any comments
+	while (1)
+	{
+		_fin.getline(line, sizeof(line) / sizeof(char));
+
+		if (_fin.eof())
+		{
+			return -1;
+		}
+
+		if (line[0] == '#')
+		{
+			continue;
+		}
+
+		break;
+	}
+
+	return atoi(line);
+}
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Saves the sample and it's average to the output file
+void save_sample(int sample, int average)
+{
+	_fout << sample << "," << average << endl;
+}
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Processes the input file
+void run_filter(const char* type)
+{
+
+}
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Opens the files for the run.  Returns -1 if either file is bad.
+int openDataFiles(const char* inputFile, const char* outputFile)
+{
+	_fin.open(inputFile);
+	if (!_fin.is_open())
+	{
+		cout << "Failed to open " << inputFile << " for reading." << endl;
+		return -1;
+	}
+
+	_fout.open(outputFile);
+	if (!_fout.is_open())
+	{
+		_fin.close();
+		cout << "Failed to open " << outputFile << " for writing." << endl;
+		return -1;
+	}
+
+	return 0;
 }
 
 
@@ -103,22 +185,33 @@ int main(int argc, char* argv[])
 	cout << "Results will be saved to " << outputFile << endl;
 	cout << endl;
 
-	for (int i = 0; i < 256; i+= 2)
+	if (openDataFiles(inputFile, outputFile) != 0)
 	{
-		push_sample(i);
+		return -1;
+	}
 
-		int sample = 0;
+	for (int i = 0; i < 100; i++)
+	{
+		int sample = read_next();
+		push_sample(sample);
+
+		int average = 0;
 		if (0 == strncmp("sma", type, 3))
 		{
-			sample = filter_sma();
+			average = filter_sma();
 		}
 		else if (0 == strncmp("ema", type, 3))
 		{
-			sample = filter_ema();
+			average = filter_ema();
 		}
 
-		cout << "Average: " << sample << endl;
+		save_sample(sample, average);
+
+		cout << "Average: " << average << endl;
 	}
+
+	_fin.close();
+	_fout.close();
 
 	cout << endl;
 
