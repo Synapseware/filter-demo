@@ -1,5 +1,6 @@
-#Enterprise tools ignores
+#Project Ignores
 filter
+*-output
 
 #Basic ignores
 default/

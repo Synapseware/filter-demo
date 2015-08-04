@@ -4,7 +4,7 @@ using namespace std;
 
 
 // program globals
-const int		dataLen			= 2;
+const int		dataLen			= 4;
 static int		data[dataLen];
 static int		writePos		= 0;
 static int		samplesAdded	= 0;
